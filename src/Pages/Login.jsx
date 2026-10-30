@@ -1,10 +1,17 @@
 import React from "react";
 import { useState } from "react";
+import { useAuth } from "../Context/AuthContext";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const { dispatch } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || "/";
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -24,10 +31,19 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log("Login button clicked");
+
     const validate = validateForm();
     if (!validate) {
       return;
     }
+
+    dispatch({
+      type: "LOGIN",
+      payload: { email: email.trim() },
+    });
+    console.log("Login action dispatched");
+    navigate(from, { replace: true });
   };
   return (
     <div className="min-h-screen bg-[#FDF8F4] flex items-center justify-center px-4 py-10">

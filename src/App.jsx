@@ -28,63 +28,86 @@ import { ShopProvider } from "./Pages/ShopContext";
 import Wishlist from "./Pages/WishList";
 import Signup from "./Pages/Signup";
 import Login from "./Pages/Login";
+import { AuthProvider } from "./Context/AuthContext";
+import ProtectedRoute from "./Components/ProtectedRoute";
 
 export const App = () => {
   return (
-    <ShopProvider>
-      <BrowserRouter>
-      <Signup/>
-      {/* <Login/> */}
-        <Navbar />
+    <AuthProvider>
+      <ShopProvider>
+        <BrowserRouter>
+          {/* <Signup/> */}
+          {/* <Login/> */}
+          <Navbar />
 
-        <Routes>
-          {/* HOME */}
-          <Route
-            path="/"
-            element={
-              <>
-                <Hero />
+          <Routes>
+            {/* HOME */}
+            <Route
+              path="/"
+              element={
+                <>
+                  <Hero />
 
-                <div className="max-w-[1200px] mx-auto">
-                  <Category />
+                  <div className="max-w-[1200px] mx-auto">
+                    <Category />
 
-                  <ProductsCard products={arrivals} heading={arrivalsHeading} />
+                    <ProductsCard
+                      products={arrivals}
+                      heading={arrivalsHeading}
+                    />
 
-                  <ProductsCard products={trending} heading={trendingHeading} />
+                    <ProductsCard
+                      products={trending}
+                      heading={trendingHeading}
+                    />
 
-                  <ProductsCard
-                    products={bestSellers}
-                    heading={bestSellersHeading}
-                  />
+                    <ProductsCard
+                      products={bestSellers}
+                      heading={bestSellersHeading}
+                    />
 
-                  <Advertisment />
+                    <Advertisment />
 
-                  <WhyShopnest />
+                    <WhyShopnest />
 
-                  <Newsletter />
-                </div>
+                    <Newsletter />
+                  </div>
 
-                <Footer />
-              </>
-            }
-          />
+                  <Footer />
+                </>
+              }
+            />
 
-          {/* SEARCH */}
-          <Route path="/search" element={<SearchResults />} />
+            {/* SEARCH */}
+            <Route path="/search" element={<SearchResults />} />
 
-          {/* PRODUCT DETAILS */}
-          <Route path="/product/:id" element={<ProductDetailsPage />} />
+            {/* PRODUCT DETAILS */}
+            <Route path="/product/:id" element={<ProductDetailsPage />} />
 
-          {/* CATEGORIES */}
-          <Route path="/categories" element={<Category />} />
+            {/* CATEGORIES */}
+            <Route path="/categories" element={<Category />} />
 
-          {/* CART */}
-          <Route path="/cart" element={<Cart />} />
-          {/* WISHLIST */}
-          <Route path="/wishlist" element={<Wishlist />} />
-        </Routes>
-      </BrowserRouter>
-    </ShopProvider>
+            {/* CART */}
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute>
+                  <Cart />
+                </ProtectedRoute>
+              }
+            />
+            {/* WISHLIST */}
+            <Route path="/wishlist"  element={
+                <ProtectedRoute>
+                  <Wishlist />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </BrowserRouter>
+      </ShopProvider>
+    </AuthProvider>
   );
 };
 
