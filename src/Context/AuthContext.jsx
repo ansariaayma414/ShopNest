@@ -16,9 +16,16 @@ export const AuthContext = createContext();
 
       case "LOGOUT":
         return initialState;
+
+        case "SIGNUP":
+          return{
+            user:action.payload,
+            isAuthenticated: true,
+          }
       default:
         return state;
     }
+
 
   };
  export const AuthProvider = ({children})=>{

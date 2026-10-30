@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useAuth } from "../Context/AuthContext";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -6,6 +8,10 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [terms, setTerms] = useState(false);
+
+
+  const {dispatch} = useAuth();
+  const navigate = useNavigate();
 
   const [errors, setErrors] = useState({});
   const validateForm = () => {
@@ -45,6 +51,15 @@ const Signup = () => {
     if (!valid) {
       return;
     }
+
+    dispatch({
+      type:"SIGNUP",
+      payload:{name:name.trim(),
+        email:email.trim(),
+      }
+    })
+    navigate("/");
+    
     console.log("form submitted");
     setName("");
     setEmail("");
