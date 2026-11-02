@@ -5,6 +5,7 @@ import { useAuth } from "../Context/AuthContext";
 
 export const Navbar = () => {
   const [search, setSearch] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
   const { user, isAuthenticated, dispatch } = useAuth();
@@ -13,6 +14,14 @@ export const Navbar = () => {
     if (!search.trim()) return;
 
     navigate(`/search?q=${encodeURIComponent(search)}`); // search = user search
+  };
+
+  const handleLogout = () => {
+    dispatch({
+      type:"LOGOUT",
+    })
+    setIsDropdownOpen(false);
+    navigate("/login")
   };
 
   return (
@@ -81,9 +90,45 @@ export const Navbar = () => {
           alt=""
         /> */}
         {isAuthenticated ? (
-          <span className="text-sm font-medium text-gray-700">
-            {user?.name || "Account"}
-          </span>
+          <div className="relative">
+            <img
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-6 h-6 cursor-pointer hover:scale-110 transition"
+              src="https://cdn-icons-png.flaticon.com/128/1077/1077114.png"
+              alt="Account"
+            />
+            {isDropdownOpen && (
+              <div className="absolute right-0 top-10 w-48 bg-white shadow-lg rounded-lg border border-gray-100 py-2 z-50">
+                <p className="px-4 py-2 text-sm font-semibold text-gray-800">
+                  {user?.email}
+                </p>
+
+                <hr />
+
+                <Link
+                  to="/wishlist"
+                  className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  My Wishlist
+                </Link>
+
+                <Link
+                  to="/cart"
+                  className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  My Cart
+                </Link>
+                <div
+                  className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="flex items-center gap-3">
             <Link
