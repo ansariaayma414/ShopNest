@@ -10,6 +10,8 @@ export const Navbar = () => {
 
   const { user, isAuthenticated, dispatch } = useAuth();
 
+
+
   const handleSearch = () => {
     if (!search.trim()) return;
 
@@ -18,10 +20,10 @@ export const Navbar = () => {
 
   const handleLogout = () => {
     dispatch({
-      type:"LOGOUT",
-    })
+      type: "LOGOUT",
+    });
     setIsDropdownOpen(false);
-    navigate("/login")
+    navigate("/login");
   };
 
   return (
@@ -155,6 +157,11 @@ export const Navbar = () => {
             alt="Cart"
           />
         </Link>
+
+        {/* subtotal */}
+
+
+        
       </div>
     </nav>
   );

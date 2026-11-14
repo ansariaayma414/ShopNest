@@ -30,16 +30,19 @@ import Signup from "./Pages/Signup";
 import Login from "./Pages/Login";
 import { AuthProvider } from "./Context/AuthContext";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import { Checkout } from "./Pages/Checkout";
+import OrderConfirmation from "./Pages/OrderConfirmation";
 
 export const App = () => {
   return (
     <AuthProvider>
       <ShopProvider>
         <BrowserRouter>
-          {/* <Signup/> */}
-          {/* <Login/> */}
-          <Navbar />
 
+          <Navbar />
+        
+          
+    
           <Routes>
             {/* HOME */}
             <Route
@@ -86,6 +89,7 @@ export const App = () => {
 
             {/* CATEGORIES */}
             <Route path="/categories" element={<Category />} />
+            <Route path="/order-confirmation/:id" element={<OrderConfirmation/>}/>
 
             {/* CART */}
             <Route
@@ -97,7 +101,9 @@ export const App = () => {
               }
             />
             {/* WISHLIST */}
-            <Route path="/wishlist"  element={
+            <Route
+              path="/wishlist"
+              element={
                 <ProtectedRoute>
                   <Wishlist />
                 </ProtectedRoute>
@@ -105,6 +111,7 @@ export const App = () => {
             />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/checkout" element={<Checkout />} />
           </Routes>
         </BrowserRouter>
       </ShopProvider>
