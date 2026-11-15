@@ -1,35 +1,82 @@
+
 import React, { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import {
+  Heart,
+  ShoppingCart,
+  Zap,
+  Truck,
+  ShieldCheck,
+  ChevronRight,
+  Minus,
+  Plus,
+} from "lucide-react";
 import { ShopContext } from "./ShopContext";
-import { Link } from "react-router-dom";
 
 export const ProductDetailsPage = () => {
   const [count, setCount] = useState(1);
   const [product, setProduct] = useState(null);
+  const [error, setError] = useState("");
 
   const { dispatch } = useContext(ShopContext);
   const { id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      const response = await fetch(`https://dummyjson.com/products/${id}`);
+    const controller = new AbortController();
 
-      const data = await response.json();
-      setProduct(data);
+    const fetchProduct = async () => {
+      setProduct(null);
+      setError("");
+      setCount(1);
+
+      try {
+        const response = await fetch(
+          `https://dummyjson.com/products/${id}`,
+          { signal: controller.signal }
+        );
+
+        if (!response.ok) {
+          throw new Error("Unable to load product");
+        }
+
+        const data = await response.json();
+        setProduct(data);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setError("Something went wrong while loading this product.");
+        }
+      }
     };
 
     fetchProduct();
+
+    return () => controller.abort();
   }, [id]);
 
-  if (!product) {
+  if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FDF8F4]">
-        <p className="text-sm text-gray-500">Loading product...</p>
+      <div className="flex min-h-[60vh] items-center justify-center bg-[#101412] px-5">
+        <p className="text-center text-[#E16B6B]">{error}</p>
       </div>
     );
   }
 
+  if (!product) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center bg-[#101412]">
+        <p className="animate-pulse text-sm text-[#A5AEA8]">
+          Loading product...
+        </p>
+      </div>
+    );
+  }
+
+  const inStock = product.stock > 0;
+
   const handleCart = () => {
+    if (!inStock) return;
+
     dispatch({
       type: "ADD_TO_CART",
       payload: {
@@ -39,240 +86,268 @@ export const ProductDetailsPage = () => {
     });
   };
 
-  const wishlist = () => {
+  const handleWishlist = () => {
     dispatch({
       type: "ADD_TO_WISHLIST",
       payload: product,
     });
   };
 
+  const handleBuyNow = () => {
+    if (!inStock) return;
+
+    handleCart();
+    navigate("/checkout");
+  };
+
+  const originalPrice = product.discountPercentage
+    ? product.price / (1 - product.discountPercentage / 100)
+    : null;
+
   return (
-    <div className="min-h-screen bg-[#FDF8F4] px-5 py-7 md:px-10 lg:px-16">
+    <main className="min-h-screen bg-[#101412] px-4 py-8 text-[#F4F6F4] md:px-8 lg:py-12">
       <div className="mx-auto max-w-7xl">
+
         {/* Breadcrumb */}
-        <div className="mb-5 flex items-center gap-2 text-xs text-gray-400">
-          <span>Home</span>
-          <span>/</span>
-          <span>{product.category}</span>
-          <span>/</span>
-          <span className="max-w-[250px] truncate text-[#1C211F]">
+        <nav className="mb-7 flex flex-wrap items-center gap-2 text-xs text-[#A5AEA8]">
+          <Link to="/" className="hover:text-[#3D9B79]">
+            Home
+          </Link>
+
+          <ChevronRight size={14} />
+
+          <span className="capitalize">{product.category}</span>
+
+          <ChevronRight size={14} />
+
+          <span className="max-w-[220px] truncate text-[#F4F6F4] sm:max-w-sm">
             {product.title}
           </span>
-        </div>
+        </nav>
 
         {/* Main Product Card */}
-        <div className="grid overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm md:grid-cols-2">
-          {/* ================= IMAGE SECTION ================= */}
-          <div className="relative flex min-h-[420px] items-center justify-center bg-[#F5F0EB] p-8 md:min-h-[560px] md:p-10">
-            {/* Discount Badge */}
-            {product.discountPercentage && (
-              <div className="absolute left-5 top-5 z-10 rounded-full bg-[#1C211F] px-3.5 py-1.5 text-[11px] font-semibold tracking-wide text-white">
+        <div className="grid overflow-hidden rounded-2xl border border-[#303A34] bg-[#191F1C] md:grid-cols-2">
+
+          {/* Product Image */}
+          <div className="relative flex min-h-[350px] items-center justify-center bg-[#E9EEEA] p-8 md:min-h-[550px] md:p-12">
+
+            {product.discountPercentage > 0 && (
+              <span className="absolute left-5 top-5 rounded-full bg-[#1E3A2F] px-4 py-2 text-xs font-semibold text-[#3D9B79]">
                 -{Math.round(product.discountPercentage)}% OFF
-              </div>
+              </span>
             )}
 
-            {/* Wishlist */}
             <button
-              onClick={wishlist}
-              className="absolute right-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-gray-100 bg-white text-lg text-[#1C211F] shadow-sm transition hover:scale-105 hover:bg-gray-50"
+              type="button"
+              onClick={handleWishlist}
+              aria-label="Add to wishlist"
+              className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full border border-[#303A34] bg-[#191F1C] text-[#F4F6F4] transition hover:border-[#3D9B79] hover:text-[#3D9B79]"
             >
-              ♡
+              <Heart size={21} />
             </button>
 
-            {/* Product Image */}
-            <div className="flex h-full w-full items-center justify-center">
-              <img
-                src={product.thumbnail}
-                alt={product.title}
-                className="h-[330px] w-full max-w-[500px] object-contain transition duration-500 hover:scale-105 md:h-[440px]"
-              />
-            </div>
+            <img
+              src={product.thumbnail}
+              alt={product.title}
+              className="h-[300px] w-full max-w-[500px] object-contain transition-transform duration-500 hover:scale-105 md:h-[430px]"
+            />
           </div>
 
-          {/* ================= PRODUCT INFO ================= */}
+          {/* Product Information */}
           <div className="flex flex-col justify-center p-6 md:p-9 lg:p-11">
-            {/* Category */}
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7C5CFF]">
+
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#3D9B79]">
               {product.category}
             </p>
 
-            {/* Title */}
-            <h1 className="max-w-xl text-2xl font-semibold leading-tight tracking-tight text-[#1C211F] md:text-3xl lg:text-[38px]">
+            <h1 className="text-2xl font-bold leading-tight tracking-tight md:text-3xl lg:text-4xl">
               {product.title}
             </h1>
 
             {/* Rating */}
-            <div className="mt-4 flex items-center gap-2.5">
-              <div className="flex items-center gap-0.5 text-sm text-[#7C5CFF]">
-                ★★★★★
-              </div>
+            <div className="mt-5 flex items-center gap-3">
+              <span className="text-sm text-amber-400">★★★★★</span>
 
-              <span className="text-sm font-medium text-[#1C211F]">
+              <span className="text-sm font-semibold">
                 {product.rating}
               </span>
 
-              <span className="text-xs text-gray-400">· Customer reviews</span>
+              <span className="text-xs text-[#A5AEA8]">
+                Customer rating
+              </span>
             </div>
 
             {/* Price */}
-            <div className="mt-5 flex items-end gap-3">
-              <span className="text-2xl font-semibold text-[#1C211F]">
+            <div className="mt-6 flex flex-wrap items-end gap-3">
+              <span className="text-3xl font-bold text-[#3D9B79]">
                 ${product.price}
               </span>
 
-              {product.discountPercentage && (
-                <span className="pb-0.5 text-sm text-gray-400 line-through">
-                  $
-                  {(
-                    product.price /
-                    (1 - product.discountPercentage / 100)
-                  ).toFixed(2)}
+              {originalPrice && (
+                <span className="pb-1 text-sm text-[#A5AEA8] line-through">
+                  ${originalPrice.toFixed(2)}
                 </span>
               )}
             </div>
 
-            {/* Description */}
-            <p className="mt-4 max-w-xl text-sm leading-6 text-gray-500">
+            <p className="mt-5 max-w-xl text-sm leading-7 text-[#A5AEA8]">
               {product.description}
             </p>
 
-            {/* Divider */}
-            <div className="my-6 h-px bg-gray-200" />
+            <div className="my-7 h-px bg-[#303A34]" />
 
             {/* Quantity */}
             <div>
-              <div className="mb-2.5 flex items-center justify-between">
-                <p className="text-sm font-semibold text-[#1C211F]">Quantity</p>
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-semibold">Quantity</p>
 
-                <span className="text-[11px] text-gray-400">
-                  {product.stock > 0
+                <span
+                  className={`text-xs ${
+                    inStock ? "text-[#65C9A3]" : "text-[#E16B6B]"
+                  }`}
+                >
+                  {inStock
                     ? `${product.stock} available`
                     : "Out of stock"}
                 </span>
               </div>
 
-              <div className="flex w-fit items-center overflow-hidden rounded-lg border border-gray-200">
+              <div className="flex w-fit items-center overflow-hidden rounded-lg border border-[#303A34] bg-[#141916]">
                 <button
-                  onClick={() => setCount(Math.max(1, count - 1))}
-                  className="flex h-10 w-10 items-center justify-center text-lg text-gray-600 transition hover:bg-gray-50"
+                  type="button"
+                  onClick={() => setCount((prev) => Math.max(1, prev - 1))}
+                  disabled={count <= 1 || !inStock}
+                  aria-label="Decrease quantity"
+                  className="flex h-11 w-11 items-center justify-center transition hover:bg-[#26332D] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  −
+                  <Minus size={17} />
                 </button>
 
-                <span className="flex h-10 w-11 items-center justify-center border-x border-gray-200 text-sm font-semibold text-[#1C211F]">
+                <span className="flex h-11 w-12 items-center justify-center border-x border-[#303A34] text-sm font-semibold">
                   {count}
                 </span>
 
                 <button
-                  onClick={() => setCount(count + 1)}
-                  className="flex h-10 w-10 items-center justify-center text-lg text-gray-600 transition hover:bg-gray-50"
+                  type="button"
+                  onClick={() =>
+                    setCount((prev) => Math.min(product.stock, prev + 1))
+                  }
+                  disabled={!inStock || count >= product.stock}
+                  aria-label="Increase quantity"
+                  className="flex h-11 w-11 items-center justify-center transition hover:bg-[#26332D] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  +
+                  <Plus size={17} />
                 </button>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="mt-5 flex gap-3">
-              {/* Add To Cart */}
-              <Link to="/cart">
-                <button
-                  onClick={handleCart}
-                  disabled={product.stock === 0}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#1C211F] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#303532] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Add to Cart
-                  <span className="text-sm">🛒</span>
-                </button>
-              </Link>
-
-              {/* Wishlist */}
+            {/* Add to Cart and Wishlist */}
+            <div className="mt-7 flex gap-3">
               <button
-                onClick={wishlist}
-                className="flex h-[46px] w-[46px] items-center justify-center rounded-lg border border-gray-200 text-lg text-[#1C211F] transition hover:bg-gray-50"
+                type="button"
+                onClick={() => {
+                  handleCart();
+                  navigate("/cart");
+                }}
+                disabled={!inStock}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#3D9B79] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#328568] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                ♡
+                <ShoppingCart size={18} />
+                Add to Cart
+              </button>
+
+              <button
+                type="button"
+                onClick={handleWishlist}
+                aria-label="Add to wishlist"
+                className="flex h-12 w-12 items-center justify-center rounded-lg border border-[#303A34] transition hover:border-[#3D9B79] hover:text-[#3D9B79]"
+              >
+                <Heart size={20} />
               </button>
             </div>
 
             {/* Buy Now */}
             <button
-              disabled={product.stock === 0}
-              className="mt-2.5 w-full rounded-lg bg-[#7C5CFF] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              onClick={handleBuyNow}
+              disabled={!inStock}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#3D9B79] bg-[#1E3A2F] px-5 py-3 text-sm font-semibold text-[#65C9A3] transition hover:bg-[#263F33] disabled:cursor-not-allowed disabled:opacity-50"
             >
+              <Zap size={18} />
               Buy Now
             </button>
 
-            {/* Product Details */}
-            <div className="mt-6 grid grid-cols-2 gap-5 border-t border-gray-200 pt-5">
+            {/* Delivery and Availability */}
+            <div className="mt-8 grid grid-cols-2 gap-5 border-t border-[#303A34] pt-6">
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
-                  Delivery
+                <div className="mb-2 flex items-center gap-2 text-[#3D9B79]">
+                  <Truck size={17} />
+                  <span className="text-xs font-semibold">Delivery</span>
+                </div>
+
+                <p className="text-sm font-medium">
+                  Calculated at checkout
                 </p>
 
-                <p className="mt-1.5 text-xs font-semibold text-[#1C211F]">
-                  Free Delivery
-                </p>
-
-                <p className="mt-1 text-[11px] text-gray-400">
-                  Available at checkout
+                <p className="mt-1 text-xs text-[#A5AEA8]">
+                  Based on your order
                 </p>
               </div>
 
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
-                  Availability
+                <div className="mb-2 flex items-center gap-2 text-[#3D9B79]">
+                  <ShieldCheck size={17} />
+                  <span className="text-xs font-semibold">Availability</span>
+                </div>
+
+                <p className={inStock
+                  ? "text-sm font-medium text-[#65C9A3]"
+                  : "text-sm font-medium text-[#E16B6B]"
+                }>
+                  {inStock ? "In Stock" : "Out of Stock"}
                 </p>
 
-                <p
-                  className={`mt-1.5 text-xs font-semibold ${
-                    product.stock > 0 ? "text-green-600" : "text-red-500"
-                  }`}
-                >
-                  {product.stock > 0 ? "In Stock" : "Out of Stock"}
-                </p>
-
-                <p className="mt-1 text-[11px] text-gray-400">
-                  Secure checkout
+                <p className="mt-1 text-xs text-[#A5AEA8]">
+                  {inStock ? `${product.stock} units listed` : "Currently unavailable"}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ================= EXTRA PRODUCT INFO ================= */}
-        <div className="mt-4 grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 sm:grid-cols-3">
-          <div className="bg-white p-5">
-            <p className="text-[10px] uppercase tracking-wider text-gray-400">
-              Brand
-            </p>
+        {/* Extra Product Information */}
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {[
+            {
+              label: "Brand",
+              value: product.brand || "Not specified",
+            },
+            {
+              label: "Warranty",
+              value: product.warrantyInformation || "Not specified",
+            },
+            {
+              label: "Returns",
+              value: product.returnPolicy || "Not specified",
+            },
+          ].map((detail) => (
+            <div
+              key={detail.label}
+              className="rounded-xl border border-[#303A34] bg-[#191F1C] p-6"
+            >
+              <p className="text-xs uppercase tracking-wider text-[#A5AEA8]">
+                {detail.label}
+              </p>
 
-            <p className="mt-1.5 text-sm font-semibold text-[#1C211F]">
-              {product.brand || "ShopNest"}
-            </p>
-          </div>
-
-          <div className="bg-white p-5">
-            <p className="text-[10px] uppercase tracking-wider text-gray-400">
-              Warranty
-            </p>
-
-            <p className="mt-1.5 text-sm font-semibold text-[#1C211F]">
-              {product.warrantyInformation || "1 Year Warranty"}
-            </p>
-          </div>
-
-          <div className="bg-white p-5">
-            <p className="text-[10px] uppercase tracking-wider text-gray-400">
-              Returns
-            </p>
-
-            <p className="mt-1.5 text-sm font-semibold text-[#1C211F]">
-              {product.returnPolicy || "7 Days Return"}
-            </p>
-          </div>
+              <p className="mt-3 text-sm font-semibold text-[#F4F6F4]">
+                {detail.value}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+    </main>
   );
 };
+
+export default ProductDetailsPage;

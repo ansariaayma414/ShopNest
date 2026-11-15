@@ -1,43 +1,59 @@
+
 import React, { useEffect, useState } from "react";
 import { ProductsCard } from "./ProductsCard";
+import { SearchX, AlertCircle, RefreshCw } from "lucide-react";
 
-export const ProductApi = ({ searchTerm }) => {
+export const ProductApi = ({ searchTerm = "" }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  
+  useEffect(() => {
+    const controller = new AbortController();
+
     const fetchData = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await fetch("https://dummyjson.com/products");
+        const response = await fetch(
+          "https://dummyjson.com/products",
+          { signal: controller.signal }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }
-        const data = await response.json();
 
+        const data = await response.json();
         setProducts(data.products);
       } catch (error) {
-        console.error("API Error : ", error.message);
+        if (error.name === "AbortError") return;
+
+        console.error("API Error:", error.message);
         setError("Unable to load products. Please try again.");
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
-   useEffect(() => {
-    fetchData();
-  }, []);
 
+    fetchData();
+
+    return () => controller.abort();
+  }, [retryCount]);
+
+  // Filter products based on search
   const searchedProducts = products.filter((product) =>
     product.title
       .toLowerCase()
       .replace(/\s/g, "")
-      .includes(searchTerm.toLowerCase().replace(/\s/g, "")),
+      .includes(searchTerm.toLowerCase().replace(/\s/g, ""))
   );
 
+  // Format data for ProductsCard
   const formattedProducts = searchedProducts.map((product) => ({
     id: product.id,
     image: product.thumbnail,
@@ -46,77 +62,92 @@ export const ProductApi = ({ searchTerm }) => {
     rating: product.rating,
   }));
 
+  // Loading
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-120">
-        <div className="w-12 h-12 border-4 border-gray-200 border-t-[#7C5CFF] rounded-full animate-spin"></div>
+      <div className="flex min-h-[480px] flex-col items-center justify-center gap-5 bg-[#101412] px-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#303A34] border-t-[#3D9B79]" />
+
+        <p className="text-sm font-medium text-[#A5AEA8]">
+          Loading products...
+        </p>
       </div>
     );
   }
 
+  // Error
   if (error) {
-  return (
-    <div className="flex flex-col justify-center items-center h-120 gap-4">
-      <p className="text-xl font-semibold text-gray-800">
-        Something went wrong!
-      </p>
-
-      <p className="text-gray-500">{error}</p>
-
-      <button
-        onClick={fetchData}
-        className="px-5 py-2 bg-[#7C5CFF] text-white rounded-lg hover:opacity-90"
-      >
-        Try Again
-      </button>
-    </div>
-  );
-}
-
- if (searchTerm && searchedProducts.length === 0) {
-  return (
-    <div className="flex flex-col justify-center items-center h-120 gap-4 text-center px-4">
-
-      {/* Search Icon */}
-      <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.8}
-          stroke="currentColor"
-          className="w-10 h-10 text-[#7C5CFF]"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path
-            strokeLinecap="round"
-            d="m20 20-4-4"
+    return (
+      <div className="flex min-h-[480px] flex-col items-center justify-center gap-4 bg-[#101412] px-4 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#305344] bg-[#1E3A2F]">
+          <AlertCircle
+            size={34}
+            strokeWidth={1.7}
+            className="text-[#3D9B79]"
           />
-        </svg>
+        </div>
+
+        <h2 className="text-2xl font-bold text-[#F4F6F4]">
+          Something Went Wrong
+        </h2>
+
+        <p className="max-w-md text-sm leading-6 text-[#A5AEA8]">
+          {error}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setRetryCount((count) => count + 1)}
+          className="mt-3 flex items-center gap-2 rounded-xl bg-[#3D9B79] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#328568]"
+        >
+          <RefreshCw size={17} />
+          Try Again
+        </button>
       </div>
+    );
+  }
 
-      {/* Message */}
-      <h2 className="text-2xl font-bold text-[#1C1C1E]">
-        No Results Found
-      </h2>
+  // No Search Results
+  if (searchTerm.trim() && searchedProducts.length === 0) {
+    return (
+      <div className="flex min-h-[480px] flex-col items-center justify-center gap-4 bg-[#101412] px-4 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#305344] bg-[#1E3A2F]">
+          <SearchX
+            size={35}
+            strokeWidth={1.6}
+            className="text-[#3D9B79]"
+          />
+        </div>
 
-      <p className="text-gray-500 text-sm max-w-md">
-        We couldn't find any products matching your search.
-        Try different keywords or check for typos.
-      </p>
+        <h2 className="text-2xl font-bold text-[#F4F6F4]">
+          No Results Found
+        </h2>
 
-    </div>
-  );
-}
+        <p className="max-w-md text-sm leading-6 text-[#A5AEA8]">
+          We couldn't find any products matching
+          <span className="font-semibold text-[#F4F6F4]">
+            {" "}"{searchTerm}"
+          </span>
+          . Try different keywords or check for typos.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <ProductsCard
-      products={formattedProducts}
-      heading={{
-        header: "Search Results",
-        para: "Products matching your search",
-      }}
-      isDynamic={true}
-    />
+    <div className="bg-[#101412]">
+      <ProductsCard
+        products={formattedProducts}
+        heading={{
+          header: searchTerm.trim()
+            ? "Search Results"
+            : "Explore Products",
+          para: searchTerm.trim()
+            ? `Products matching "${searchTerm}"`
+            : "Discover products from our collection",
+        }}
+        isDynamic={true}
+      />
+    </div>
   );
 };

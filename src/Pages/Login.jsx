@@ -1,12 +1,15 @@
-import React from "react";
-import { useState } from "react";
+
+import React, { useState } from "react";
 import { useAuth } from "../Context/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+
   const { dispatch } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -15,131 +18,199 @@ const Login = () => {
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     const newErrors = {};
+
     if (email.trim() === "") {
       newErrors.email = "Email cannot be empty";
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(email.trim())) {
       newErrors.email = "Enter a valid email";
     }
+
     if (password.trim() === "") {
       newErrors.password = "Please enter your password";
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Login button clicked");
 
-    const validate = validateForm();
-    if (!validate) {
-      return;
-    }
+    if (!validateForm()) return;
 
     dispatch({
       type: "LOGIN",
       payload: { email: email.trim() },
     });
-    console.log("Login action dispatched");
+
     navigate(from, { replace: true });
   };
-  return (
-    <div className="min-h-screen bg-[#FDF8F4] flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md">
-        {/* Logo / Heading */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#1C211F]">ShopNest</h1>
 
-          <p className="text-gray-500 mt-2">
-            Welcome back! Login to continue shopping.
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#101412] px-4 py-12">
+      <div className="w-full max-w-md">
+
+        {/* Logo / Heading */}
+        <div className="mb-9 text-center">
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center gap-2"
+          >
+            <span className="text-3xl font-bold tracking-tight text-[#F4F6F4]">
+              Shop<span className="text-[#3D9B79]">Nest</span>
+            </span>
+          </Link>
+
+          <p className="mt-3 text-sm text-[#A5AEA8]">
+            Welcome back! Sign in to continue shopping.
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <h2 className="text-2xl font-semibold text-[#1C211F] mb-2">
-            Welcome Back
-          </h2>
+        <div className="rounded-2xl border border-[#303A34] bg-[#191F1C] p-6 shadow-[0_15px_50px_rgba(0,0,0,0.12)] sm:p-8">
 
-          <p className="text-sm text-gray-500 mb-6">
-            Enter your details to access your account.
-          </p>
+          <div className="mb-7">
+            <h1 className="text-2xl font-bold text-[#F4F6F4]">
+              Welcome Back
+            </h1>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+            <p className="mt-2 text-sm text-[#A5AEA8]">
+              Enter your details to access your account.
+            </p>
+          </div>
+
+          <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-[#1C211F] mb-2">
+              <label
+                htmlFor="login-email"
+                className="mb-2 block text-sm font-medium text-[#F4F6F4]"
+              >
                 Email Address
               </label>
 
-              <input
-                onChange={(e) => setEmail(e.target.value)}
-                value={email}
-                type="email"
-                placeholder="Enter your email"
-                className={`w-full px-4 py-3 rounded-lg border border-gray-200
-                outline-none focus:border-[#7C5CFF]
-                focus:ring-2 focus:ring-[#7C5CFF]/10 transition ${errors.email ? "border-red-500" : "border-gray-200"}`}
-              />
+              <div className="relative">
+                <Mail
+                  size={18}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A5AEA8]"
+                />
+
+                <input
+                  id="login-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  autoComplete="email"
+                  aria-invalid={Boolean(errors.email)}
+                  className={`w-full rounded-lg border bg-[#141916] py-3 pl-11 pr-4 text-sm text-[#F4F6F4] outline-none placeholder:text-[#77847D] transition focus:ring-2 focus:ring-[#3D9B79]/15 ${
+                    errors.email
+                      ? "border-[#E16B6B]"
+                      : "border-[#303A34] focus:border-[#3D9B79]"
+                  }`}
+                />
+              </div>
+
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                <p className="mt-2 text-xs text-[#E16B6B]">
+                  {errors.email}
+                </p>
               )}
             </div>
 
             {/* Password */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-[#1C211F]">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <label
+                  htmlFor="login-password"
+                  className="text-sm font-medium text-[#F4F6F4]"
+                >
                   Password
                 </label>
 
-                <span className="text-sm text-[#7C5CFF] cursor-pointer hover:underline">
+                <span className="text-xs font-medium text-[#3D9B79]">
                   Forgot Password?
                 </span>
               </div>
 
-              <input
-                onChange={(e) => setPassword(e.target.value)}
-                type="password"
-                placeholder="Enter your password"
-                className={`w-full px-4 py-3 rounded-lg border border-gray-200
-                outline-none focus:border-[#7C5CFF]
-                focus:ring-2 focus:ring-[#7C5CFF]/10 transition ${errors.password ? "border-red-500" : "border-gray-200"}`}
-              />
+              <div className="relative">
+                <LockKeyhole
+                  size={18}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A5AEA8]"
+                />
+
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  aria-invalid={Boolean(errors.password)}
+                  className={`w-full rounded-lg border bg-[#141916] py-3 pl-11 pr-12 text-sm text-[#F4F6F4] outline-none placeholder:text-[#77847D] transition focus:ring-2 focus:ring-[#3D9B79]/15 ${
+                    errors.password
+                      ? "border-[#E16B6B]"
+                      : "border-[#303A34] focus:border-[#3D9B79]"
+                  }`}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A5AEA8] transition hover:text-[#3D9B79]"
+                >
+                  {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                </button>
+              </div>
+
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                <p className="mt-2 text-xs text-[#E16B6B]">
+                  {errors.password}
+                </p>
               )}
             </div>
 
             {/* Remember Me */}
-            <div className="flex items-center gap-2">
-              <input type="checkbox" className="accent-[#7C5CFF]" />
+            <label className="flex w-fit cursor-pointer items-center gap-2.5">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-[#3D9B79]"
+              />
 
-              <span className="text-sm text-gray-500">Remember me</span>
-            </div>
+              <span className="text-sm text-[#A5AEA8]">
+                Remember me
+              </span>
+            </label>
 
             {/* Login Button */}
             <button
               type="submit"
-              className="w-full bg-[#7C5CFF] text-white py-3 rounded-lg
-              font-medium hover:bg-[#6948e8] transition duration-200"
+              className="w-full rounded-lg bg-[#3D9B79] py-3.5 text-sm font-semibold text-white transition duration-200 hover:bg-[#328568] active:scale-[0.99]"
             >
               Login
             </button>
           </form>
 
           {/* Signup */}
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="mt-7 text-center text-sm text-[#A5AEA8]">
             Don't have an account?{" "}
-            <span className="text-[#7C5CFF] font-medium cursor-pointer hover:underline">
+            <Link
+              to="/signup"
+              className="font-semibold text-[#3D9B79] transition hover:text-[#65C9A3] hover:underline"
+            >
               Create Account
-            </span>
+            </Link>
           </p>
         </div>
+
+        <p className="mt-7 text-center text-xs text-[#77847D]">
+          ShopNest · A better way to shop
+        </p>
       </div>
-    </div>
+    </main>
   );
 };
 

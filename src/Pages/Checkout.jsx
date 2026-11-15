@@ -1,28 +1,45 @@
+
 import { useContext, useState } from "react";
 import { ShopContext } from "./ShopContext";
 import { useNavigate } from "react-router-dom";
+import {
+  MapPin,
+  CreditCard,
+  Banknote,
+  ShieldCheck,
+  ArrowRight,
+  ShoppingBag,
+} from "lucide-react";
 
 export const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [errors, setErrors] = useState({});
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [pincode, setPincode] = useState("");
+
   const { state, dispatch } = useContext(ShopContext);
   const navigate = useNavigate();
 
+  const subtotal = state.cart.reduce((total, product) => {
+    return total + product.price * product.quantity;
+  }, 0);
+
+  const shippingCharges = 0;
+  const total = subtotal + shippingCharges;
+
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     const newErrors = {};
 
     if (name.trim() === "") {
       newErrors.name = "Name is required";
     } else if (!/^[A-Za-z\s]+$/.test(name.trim())) {
-      newErrors.name = "Name can only contain letters";
+      newErrors.name = "Name can only contain letters and spaces";
     }
 
     if (email.trim() === "") {
@@ -33,7 +50,7 @@ export const Checkout = () => {
 
     if (phoneNumber.trim() === "") {
       newErrors.phoneNumber = "Please enter your phone number";
-    } else if (!/^\d{10}$/.test(phoneNumber)) {
+    } else if (!/^\d{10}$/.test(phoneNumber.trim())) {
       newErrors.phoneNumber = "Enter a valid 10-digit phone number";
     }
 
@@ -44,28 +61,22 @@ export const Checkout = () => {
     if (city.trim() === "") {
       newErrors.city = "City is required";
     }
+
     if (pincode.trim() === "") {
       newErrors.pincode = "Pincode cannot be empty";
+    } else if (!/^\d{6}$/.test(pincode.trim())) {
+      newErrors.pincode = "Enter a valid 6-digit pincode";
     }
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const validate = validateForm();
-
-    if (!validate) return;
+    if (!validateForm()) return;
     if (state.cart.length === 0) return;
-
-    const subtotal = state.cart.reduce((product, total) => {
-      return total + product.price * product.quantity;
-    });
-
-    const shippingCharges = 0;
 
     const newOrder = {
       orderId: `SN-${Date.now()}`,
@@ -81,18 +92,20 @@ export const Checkout = () => {
       customer: {
         name: name.trim(),
         email: email.trim(),
-        phone: phoneNumber,
-        address: `${address}, ${city}, ${pincode}`,
+        phone: phoneNumber.trim(),
+        address: `${address.trim()}, ${city.trim()}, ${pincode.trim()}`,
       },
 
       items: state.cart.map((product) => ({ ...product })),
 
       subtotal,
       shippingCharges,
-      total: subtotal + shippingCharges,
+      total,
 
       paymentMethod:
-        paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment (Demo)",
+        paymentMethod === "cod"
+          ? "Cash on Delivery"
+          : "Online Payment (Demo)",
     };
 
     dispatch({
@@ -101,206 +114,370 @@ export const Checkout = () => {
     });
 
     navigate(`/order-confirmation/${newOrder.orderId}`);
-
-    setName("");
-    setEmail("");
-    setPhoneNumber("");
-    setAddress("");
-    setCity("");
-    setPincode("");
   };
 
-  const subtotal = state.cart.reduce((total, product) => {
-    return total + product.price * product.quantity;
-  }, 0);
-  const shippingCharges = 0;
-  const total = subtotal + shippingCharges;
+  const inputClass = (error) =>
+    `w-full rounded-lg border bg-[#141916] px-4 py-3 text-sm
+     text-[#F4F6F4] outline-none placeholder:text-[#77847D]
+     transition focus:ring-2 focus:ring-[#3D9B79]/15
+     ${
+       error
+         ? "border-[#E16B6B]"
+         : "border-[#303A34] focus:border-[#3D9B79]"
+     }`;
 
   return (
-    <div className="min-h-screen bg-[#FDF8F4] px-4 py-10">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-semibold text-[#1C1C1E] mb-2">Checkout</h1>
-        <p className="text-gray-500 mb-8">
-          Complete your order by providing your details.
-        </p>
+    <main className="min-h-screen bg-[#101412] px-4 py-10 text-[#F4F6F4] sm:px-6 lg:px-10 lg:py-14">
+      <div className="mx-auto max-w-6xl">
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Delivery Details */}
-          <div className="md:col-span-2 bg-white p-6 rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold mb-6">Delivery Information</h2>
+        {/* Page Header */}
+        <div className="mb-9">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#3D9B79]">
+            Almost There
+          </p>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Checkout
+          </h1>
+
+          <p className="mt-3 text-sm text-[#A5AEA8]">
+            Complete your order by providing your delivery details.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+
+          {/* Delivery Information */}
+          <section className="rounded-2xl border border-[#303A34] bg-[#191F1C] p-5 sm:p-7">
+
+            <div className="mb-7 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1E3A2F] text-[#3D9B79]">
+                <MapPin size={21} />
+              </div>
+
               <div>
-                <label className="block text-sm mb-2">Full Name</label>
+                <h2 className="text-xl font-semibold">
+                  Delivery Information
+                </h2>
+                <p className="mt-1 text-xs text-[#A5AEA8]">
+                  Where should we deliver your order?
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
+
+              {/* Full Name */}
+              <div>
+                <label htmlFor="checkout-name" className="mb-2 block text-sm font-medium">
+                  Full Name
+                </label>
+
                 <input
+                  id="checkout-name"
+                  type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  type="text"
                   placeholder="Enter your full name"
-                  className={`w-full px-4 py-3 rounded-lg border border-gray-200 
-                outline-none focus:border-[#7C5CFF] focus:ring-2 
-                focus:ring-[#7C5CFF]/10 transition ${errors.name ? "border-red:500" : "border-gray-200"}`}
+                  autoComplete="name"
+                  aria-invalid={Boolean(errors.name)}
+                  className={inputClass(errors.name)}
                 />
+
                 {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                  <p className="mt-2 text-xs text-[#E16B6B]">
+                    {errors.name}
+                  </p>
                 )}
               </div>
 
+              {/* Email */}
               <div>
-                <label className="block text-sm mb-2">Email Address</label>
+                <label htmlFor="checkout-email" className="mb-2 block text-sm font-medium">
+                  Email Address
+                </label>
+
                 <input
+                  id="checkout-email"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  type="email"
                   placeholder="Enter your email"
-                  className={`w-full px-4 py-3 rounded-lg border border-gray-200 
-                outline-none focus:border-[#7C5CFF] focus:ring-2 
-                focus:ring-[#7C5CFF]/10 transition ${errors.email ? "border-red:500" : "border-gray-200"}`}
+                  autoComplete="email"
+                  aria-invalid={Boolean(errors.email)}
+                  className={inputClass(errors.email)}
                 />
+
                 {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                  <p className="mt-2 text-xs text-[#E16B6B]">
+                    {errors.email}
+                  </p>
                 )}
               </div>
 
+              {/* Phone */}
               <div>
-                <label className="block text-sm mb-2">Phone Number</label>
+                <label htmlFor="checkout-phone" className="mb-2 block text-sm font-medium">
+                  Phone Number
+                </label>
+
                 <input
+                  id="checkout-phone"
+                  type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  className={`w-full px-4 py-3 rounded-lg border border-gray-200 
-                outline-none focus:border-[#7C5CFF] focus:ring-2 
-                focus:ring-[#7C5CFF]/10 transition ${errors.phoneNumber ? "border-red:500" : "border-gray-200"}`}
+                  placeholder="Enter your 10-digit phone number"
+                  autoComplete="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  aria-invalid={Boolean(errors.phoneNumber)}
+                  className={inputClass(errors.phoneNumber)}
                 />
+
                 {errors.phoneNumber && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="mt-2 text-xs text-[#E16B6B]">
                     {errors.phoneNumber}
                   </p>
                 )}
               </div>
 
+              {/* Address */}
               <div>
-                <label className="block text-sm mb-2">Address</label>
+                <label htmlFor="checkout-address" className="mb-2 block text-sm font-medium">
+                  Delivery Address
+                </label>
+
                 <textarea
+                  id="checkout-address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  rows="3"
-                  placeholder="Enter your complete address"
-                  className={`w-full px-4 py-3 rounded-lg border border-gray-200 
-                outline-none focus:border-[#7C5CFF] focus:ring-2 
-                focus:ring-[#7C5CFF]/10 transition ${errors.address ? "border-red:500" : "border-gray-200"}`}
+                  rows={3}
+                  placeholder="House number, street, area, landmark..."
+                  autoComplete="street-address"
+                  aria-invalid={Boolean(errors.address)}
+                  className={`${inputClass(errors.address)} resize-none`}
                 />
+
                 {errors.address && (
-                  <p className="text-red-500 text-sm mt-1">{errors.address}</p>
+                  <p className="mt-2 text-xs text-[#E16B6B]">
+                    {errors.address}
+                  </p>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {/* City + Pincode */}
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm mb-2">City</label>
+                  <label htmlFor="checkout-city" className="mb-2 block text-sm font-medium">
+                    City
+                  </label>
+
                   <input
-                    onChange={(e) => setCity(e.target.value)}
-                    value={city}
+                    id="checkout-city"
                     type="text"
-                    placeholder="Enter city"
-                    className={`w-full px-4 py-3 rounded-lg border border-gray-200 
-                outline-none focus:border-[#7C5CFF] focus:ring-2 
-                focus:ring-[#7C5CFF]/10 transition ${errors.city ? "border-red:500" : "border-gray-200"}`}
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Enter your city"
+                    autoComplete="address-level2"
+                    aria-invalid={Boolean(errors.city)}
+                    className={inputClass(errors.city)}
                   />
+
                   {errors.city && (
-                    <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+                    <p className="mt-2 text-xs text-[#E16B6B]">
+                      {errors.city}
+                    </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2">Pincode</label>
+                  <label htmlFor="checkout-pincode" className="mb-2 block text-sm font-medium">
+                    Pincode
+                  </label>
+
                   <input
+                    id="checkout-pincode"
+                    type="text"
                     value={pincode}
                     onChange={(e) => setPincode(e.target.value)}
-                    type="text"
-                    placeholder="Enter pincode"
-                    className={`w-full px-4 py-3 rounded-lg border border-gray-200 
-                outline-none focus:border-[#7C5CFF] focus:ring-2 
-                focus:ring-[#7C5CFF]/10 transition ${errors.pincode ? "border-red:500" : "border-gray-200"}`}
+                    placeholder="6-digit pincode"
+                    autoComplete="postal-code"
+                    inputMode="numeric"
+                    maxLength={6}
+                    aria-invalid={Boolean(errors.pincode)}
+                    className={inputClass(errors.pincode)}
                   />
+
                   {errors.pincode && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="mt-2 text-xs text-[#E16B6B]">
                       {errors.pincode}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Payment Method</h2>
+              {/* Payment Method */}
+              <div className="border-t border-[#303A34] pt-7">
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1E3A2F] text-[#3D9B79]">
+                    <CreditCard size={21} />
+                  </div>
+
+                  <div>
+                    <h2 className="text-xl font-semibold">
+                      Payment Method
+                    </h2>
+                    <p className="mt-1 text-xs text-[#A5AEA8]">
+                      Select your preferred payment option.
+                    </p>
+                  </div>
+                </div>
 
                 <div className="space-y-3">
-                  <label className="flex items-center gap-3 border rounded-lg p-4 cursor-pointer">
+                  {/* Cash on Delivery */}
+                  <label
+                    className={`flex cursor-pointer items-center gap-4 rounded-xl border p-4 transition ${
+                      paymentMethod === "cod"
+                        ? "border-[#3D9B79] bg-[#1E3A2F]"
+                        : "border-[#303A34] bg-[#141916] hover:border-[#3D9B79]/60"
+                    }`}
+                  >
                     <input
                       type="radio"
                       name="payment"
                       value="cod"
                       checked={paymentMethod === "cod"}
                       onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="h-4 w-4 accent-[#3D9B79]"
                     />
+
+                    <Banknote size={20} className="text-[#3D9B79]" />
+
                     <span className="text-sm font-medium">
                       Cash on Delivery
                     </span>
                   </label>
 
-                  <label className="flex items-center gap-3 border rounded-lg p-4 cursor-pointer">
+                  {/* Online Payment */}
+                  <label
+                    className={`flex cursor-pointer items-center gap-4 rounded-xl border p-4 transition ${
+                      paymentMethod === "online"
+                        ? "border-[#3D9B79] bg-[#1E3A2F]"
+                        : "border-[#303A34] bg-[#141916] hover:border-[#3D9B79]/60"
+                    }`}
+                  >
                     <input
                       type="radio"
                       name="payment"
                       value="online"
                       checked={paymentMethod === "online"}
                       onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="h-4 w-4 accent-[#3D9B79]"
                     />
-                    <span className="text-sm font-medium">
-                      Online Payment (Demo)
-                    </span>
+
+                    <CreditCard size={20} className="text-[#3D9B79]" />
+
+                    <div>
+                      <p className="text-sm font-medium">
+                        Online Payment (Demo)
+                      </p>
+                      <p className="mt-1 text-xs text-[#A5AEA8]">
+                        No real payment will be processed.
+                      </p>
+                    </div>
                   </label>
                 </div>
               </div>
 
+              {/* Submit */}
               <button
                 type="submit"
-                className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition"
+                disabled={state.cart.length === 0}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3D9B79] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#328568] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Place Order
+                <ArrowRight size={18} />
               </button>
             </form>
-          </div>
+          </section>
 
           {/* Order Summary */}
-          <div className="bg-white p-6 rounded-xl shadow-sm h-fit">
-            <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
+          <aside className="rounded-2xl border border-[#303A34] bg-[#191F1C] p-6 lg:sticky lg:top-24">
+            <div className="mb-6 flex items-center gap-3">
+              <ShoppingBag size={21} className="text-[#3D9B79]" />
+              <h2 className="text-xl font-semibold">
+                Order Summary
+              </h2>
+            </div>
 
-            <div className="space-y-4 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+            {/* Cart Products */}
+            <div className="mb-6 max-h-72 space-y-4 overflow-y-auto">
+              {state.cart.map((product) => (
+                <div key={product.id} className="flex items-center gap-3">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#E9EEEA]">
+                    <img
+                      src={product.thumbnail}
+                      alt={product.title}
+                      className="h-full w-full object-contain p-1"
+                    />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {product.title}
+                    </p>
+                    <p className="mt-1 text-xs text-[#A5AEA8]">
+                      Qty: {product.quantity}
+                    </p>
+                  </div>
+
+                  <span className="shrink-0 text-sm font-semibold">
+                    ${(product.price * product.quantity).toFixed(2)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-4 border-t border-[#303A34] pt-5 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-[#A5AEA8]">Subtotal</span>
+                <span className="font-medium">
+                  ${subtotal.toFixed(2)}
+                </span>
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-gray-500">Shipping</span>
-                <span>${shippingCharges.toFixed(2)}</span>
-              </div>
-
-              <div className="border-t pt-4 flex justify-between font-semibold text-base">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+              <div className="flex justify-between gap-3">
+                <span className="text-[#A5AEA8]">Shipping</span>
+                <span className="font-medium text-[#65C9A3]">
+                  {shippingCharges === 0
+                    ? "Free"
+                    : `$${shippingCharges.toFixed(2)}`}
+                </span>
               </div>
             </div>
 
-            <p className="text-xs text-gray-400 mt-6">
-              Your order details will be saved after confirmation.
-            </p>
-          </div>
+            <div className="my-5 h-px bg-[#303A34]" />
+
+            <div className="flex items-center justify-between">
+              <span className="text-base font-semibold">Total</span>
+              <span className="text-2xl font-bold text-[#3D9B79]">
+                ${total.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="mt-6 flex items-start gap-2 rounded-xl bg-[#1E3A2F] p-3 text-xs leading-5 text-[#A5AEA8]">
+              <ShieldCheck
+                size={17}
+                className="mt-0.5 shrink-0 text-[#3D9B79]"
+              />
+              <p>
+                Your order details will be saved after confirmation.
+              </p>
+            </div>
+          </aside>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

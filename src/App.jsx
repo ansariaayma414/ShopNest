@@ -32,6 +32,7 @@ import { AuthProvider } from "./Context/AuthContext";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import { Checkout } from "./Pages/Checkout";
 import OrderConfirmation from "./Pages/OrderConfirmation";
+import OrderHistory from "./Pages/OrderHistory";
 
 export const App = () => {
   return (
@@ -88,8 +89,9 @@ export const App = () => {
             <Route path="/product/:id" element={<ProductDetailsPage />} />
 
             {/* CATEGORIES */}
-            <Route path="/categories" element={<Category />} />
-            <Route path="/order-confirmation/:id" element={<OrderConfirmation/>}/>
+            <Route path = "/categories" element={<Category />} />
+            <Route path = "/order-confirmation/:id" element={<OrderConfirmation/>}/>
+            <Route path = "/order-history" element={<OrderHistory/>}/>
 
             {/* CART */}
             <Route

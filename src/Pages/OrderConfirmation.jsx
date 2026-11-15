@@ -1,221 +1,293 @@
+
 import React, { useContext } from "react";
 import { ShopContext } from "./ShopContext";
-import { useParams } from "react-router-dom";
-
+import { Link, useParams } from "react-router-dom";
+import {
+  Check,
+  ShoppingBag,
+  ArrowRight,
+  Package,
+  MapPin,
+  CalendarDays,
+  CreditCard,
+} from "lucide-react";
 
 const OrderConfirmation = () => {
+  const { state } = useContext(ShopContext);
+  const { id } = useParams();
 
-  const {state} = useContext(ShopContext);
-  const {id} = useParams();
   const order = state.orders.find(
-    (item)=> item.orderId === id);
+    (item) => item.orderId === id
+  );
 
-    if(!order){
-      return <h2>Order Not Found</h2>
-    }
+  // Order not found
+  if (!order) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#101412] px-4 text-[#F4F6F4]">
+        <div className="max-w-md text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#1E3A2F]">
+            <Package size={34} className="text-[#3D9B79]" />
+          </div>
+
+          <h1 className="text-2xl font-bold">
+            Order Not Found
+          </h1>
+
+          <p className="mt-3 text-sm leading-6 text-[#A5AEA8]">
+            We couldn't find this order. Please check your
+            order history or return to the homepage.
+          </p>
+
+          <Link
+            to="/"
+            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#3D9B79] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#328568]"
+          >
+            Back to Home
+            <ArrowRight size={17} />
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const subtotal = order.items.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
-  const total = subtotal + order.shippingCharges;
+  const shippingCharges = order.shippingCharges ?? 0;
+  const total = subtotal + shippingCharges;
 
   return (
-    <div className="min-h-screen bg-[#FDF8F4] px-4 py-10">
-
-      <div className="max-w-3xl mx-auto">
+    <main className="min-h-screen bg-[#101412] px-4 py-10 text-[#F4F6F4] sm:px-6 lg:py-14">
+      <div className="mx-auto max-w-3xl">
 
         {/* Success Message */}
-        <div className="text-center mb-10">
-
-          <div className="w-20 h-20 rounded-full bg-purple-100 
-            flex items-center justify-center mx-auto mb-5">
-            <svg
-              className="w-10 h-10 text-[#7C5CFF]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.5"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+        <div className="mb-10 text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#305344] bg-[#1E3A2F]">
+            <Check
+              size={39}
+              strokeWidth={2.5}
+              className="text-[#48A878]"
+            />
           </div>
 
-          <h1 className="text-3xl font-bold text-[#1C1C1E] mb-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#3D9B79]">
+            Order Confirmation
+          </p>
+
+          <h1 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
             Order Placed Successfully!
           </h1>
 
-          <p className="text-gray-500">
+          <p className="mx-auto max-w-md text-sm leading-6 text-[#A5AEA8]">
             Thank you for shopping with ShopNest.
             Your order has been confirmed.
           </p>
 
-          <p className="text-sm text-gray-500 mt-3">
+          <p className="mt-4 text-sm text-[#A5AEA8]">
             Order ID:{" "}
-            <span className="font-semibold text-[#7C5CFF]">
-           {order.orderId}
+            <span className="font-semibold text-[#3D9B79]">
+              {order.orderId}
             </span>
           </p>
-
         </div>
 
-        {/* Order Information */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
+        {/* Order Summary */}
+        <section className="mb-6 overflow-hidden rounded-2xl border border-[#303A34] bg-[#191F1C] p-5 sm:p-7">
 
-          <div className="flex justify-between items-center 
-            flex-wrap gap-3 border-b pb-5">
-
+          {/* Order Metadata */}
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#303A34] pb-6">
             <div>
-              <p className="text-sm text-gray-500">state.order</p>
-              <p className="font-semibold text-[#1C1C1E] mt-1">
+              <div className="flex items-center gap-2 text-sm text-[#A5AEA8]">
+                <CalendarDays size={16} />
+                Order Date
+              </div>
+
+              <p className="mt-2 font-semibold">
                 {order.orderDate}
               </p>
             </div>
 
-            <span className="bg-green-100 text-green-700 
-              px-4 py-2 rounded-full text-sm font-medium">
+            <span className="rounded-full border border-[#305344] bg-[#1E3A2F] px-4 py-2 text-xs font-semibold text-[#65C9A3]">
               {order.status}
             </span>
-
           </div>
 
           {/* Products */}
-          <h2 className="text-lg font-bold text-[#1C1C1E] mt-6 mb-5">
-            Order Summary
-          </h2>
+          <div className="mb-5 mt-7 flex items-center gap-2">
+            <ShoppingBag
+              size={20}
+              className="text-[#3D9B79]"
+            />
+            <h2 className="text-lg font-bold">
+              Order Summary
+            </h2>
+          </div>
 
           <div className="space-y-5">
-
             {order.items.map((item) => (
               <div
                 key={item.id}
                 className="flex items-center gap-4"
               >
+                {/* Image */}
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#E9EEEA]">
+                  <img
+                    src={item.thumbnail}
+                    alt={item.title}
+                    className="h-full w-full object-contain p-2"
+                  />
+                </div>
 
-                <img
-                  src={item.thumbnail}
-                  alt={item.name}
-                  className="w-20 h-20 object-cover rounded-xl 
-                    bg-gray-100"
-                />
-
-                <div className="flex-1">
-                  <h3 className="font-semibold text-[#1C1C1E]">
-                    {item.name}
+                {/* Product Information */}
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold leading-5 sm:text-base">
+                    {item.title}
                   </h3>
 
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="mt-2 text-xs text-[#A5AEA8]">
                     Quantity: {item.quantity}
                   </p>
                 </div>
 
-                <p className="font-semibold text-[#1C1C1E]">
-                  ₹{item.price * item.quantity}
+                <p className="shrink-0 text-sm font-semibold text-[#F4F6F4]">
+                  ${(item.price * item.quantity).toFixed(2)}
                 </p>
-
               </div>
             ))}
-
           </div>
 
-          {/* Price Details */}
-          <div className="border-t mt-6 pt-5 space-y-3">
+          {/* Price Breakdown */}
+          <div className="mt-7 space-y-4 border-t border-[#303A34] pt-6">
+            <div className="flex justify-between gap-3 text-sm">
+              <span className="text-[#A5AEA8]">
+                Subtotal
+              </span>
 
-            <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>
-              <span>₹{subtotal}</span>
-            </div>
-
-            <div className="flex justify-between text-gray-600">
-              <span>Shipping</span>
-              <span>
-                {order.shippingCharges === 0
-                  ? "Free"
-                  : `₹${order.shippingCharges}`}
+              <span className="font-medium">
+                ${subtotal.toFixed(2)}
               </span>
             </div>
 
-            <div className="flex justify-between border-t pt-4 
-              text-lg font-bold text-[#1C1C1E]">
-              <span>Total Paid</span>
-              <span className="text-[#7C5CFF]">₹{total}</span>
+            <div className="flex justify-between gap-3 text-sm">
+              <span className="text-[#A5AEA8]">
+                Shipping
+              </span>
+
+              <span
+                className={
+                  shippingCharges === 0
+                    ? "font-medium text-[#65C9A3]"
+                    : "font-medium"
+                }
+              >
+                {shippingCharges === 0
+                  ? "Free"
+                  : `$${shippingCharges.toFixed(2)}`}
+              </span>
             </div>
 
+            <div className="flex justify-between gap-3 border-t border-[#303A34] pt-5 text-lg font-bold">
+              <span>Order Total</span>
+
+              <span className="text-[#3D9B79]">
+                ${total.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Delivery Information */}
+        <section className="mb-6 rounded-2xl border border-[#303A34] bg-[#191F1C] p-5 sm:p-7">
+          <div className="mb-6 flex items-center gap-2">
+            <MapPin
+              size={20}
+              className="text-[#3D9B79]"
+            />
+
+            <h2 className="text-lg font-bold">
+              Delivery Information
+            </h2>
           </div>
 
-        </div>
-
-        {/* Delivery Details */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-
-          <h2 className="text-lg font-bold text-[#1C1C1E] mb-5">
-            Delivery Information
-          </h2>
-
-          <div className="space-y-3 text-sm">
-
+          <div className="grid gap-5 text-sm sm:grid-cols-2">
             <div>
-              <p className="text-gray-500">Customer Name</p>
-              <p className="font-medium text-[#1C1C1E]">
+              <p className="mb-1.5 text-[#A5AEA8]">
+                Customer Name
+              </p>
+              <p className="font-medium">
                 {order.customer.name}
               </p>
             </div>
 
             <div>
-              <p className="text-gray-500">Email Address</p>
-              <p className="font-medium text-[#1C1C1E]">
+              <p className="mb-1.5 text-[#A5AEA8]">
+                Email Address
+              </p>
+              <p className="break-words font-medium">
                 {order.customer.email}
               </p>
             </div>
 
             <div>
-              <p className="text-gray-500">Phone Number</p>
-              <p className="font-medium text-[#1C1C1E]">
+              <p className="mb-1.5 text-[#A5AEA8]">
+                Phone Number
+              </p>
+              <p className="font-medium">
                 {order.customer.phone}
               </p>
             </div>
 
             <div>
-              <p className="text-gray-500">Shipping Address</p>
-              <p className="font-medium text-[#1C1C1E]">
+              <p className="mb-1.5 text-[#A5AEA8]">
+                Shipping Address
+              </p>
+              <p className="break-words font-medium leading-6">
                 {order.customer.address}
               </p>
             </div>
-
           </div>
 
-        </div>
+          {/* Payment Method */}
+          <div className="mt-6 flex items-start gap-3 border-t border-[#303A34] pt-5">
+            <CreditCard
+              size={19}
+              className="mt-0.5 text-[#3D9B79]"
+            />
+
+            <div>
+              <p className="text-xs text-[#A5AEA8]">
+                Payment Method
+              </p>
+
+              <p className="mt-1 text-sm font-medium">
+                {order.paymentMethod}
+              </p>
+            </div>
+          </div>
+        </section>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-4">
-
-          <button
-            onClick={() => window.location.href = "/"}
-            className="flex-1 bg-[#7C5CFF] text-white py-3 
-              rounded-xl font-semibold hover:bg-[#6846eb] 
-              transition"
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <Link
+            to="/"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#3D9B79] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#328568]"
           >
             Continue Shopping
-          </button>
+            <ArrowRight size={17} />
+          </Link>
 
-          <button
-            onClick={() => window.location.href = "/my-orders"}
-            className="flex-1 border border-[#7C5CFF] 
-              text-[#7C5CFF] py-3 rounded-xl font-semibold 
-              hover:bg-purple-50 transition"
+          <Link
+            to="/order-history"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#3D9B79] px-5 py-3.5 text-sm font-semibold text-[#65C9A3] transition hover:bg-[#1E3A2F]"
           >
+            <Package size={17} />
             View My Orders
-          </button>
-
+          </Link>
         </div>
-
       </div>
-    </div>
+    </main>
   );
 };
 

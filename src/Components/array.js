@@ -1,4 +1,4 @@
-import hero1 from "../assets/Hero-image.png";
+import hero1 from "../assets/hero-1.png";
 import hero2 from "../assets/hero-2.png";
 import hero3 from "../assets/hero-3.png";
 import women from "../assets/women.jpg";
@@ -13,9 +13,12 @@ import shoes from '../assets/shoes.jpg'
 import backpack from '../assets/backpack.jpg';
 import smart_watch from '../assets/smart-watch.webp'
 import handbag from '../assets/handbag.webp'
+import hero from '../assets/hero-emerald.png';
 
 export const slides = [
+
   {
+
     image: hero1,
     title: "Welcome to ShopNest",
     description: "Everything you need, all in one place.",
@@ -179,4 +182,5 @@ export const bestSellersHeading = {
   para:"Loved by thoughts"
 }
 
+export default slides;
 
